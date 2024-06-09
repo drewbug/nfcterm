@@ -26,7 +26,21 @@ public class ShellMain {
 
     ServiceManager.getActivityManager().startActivity(intent);
 
-    shell.start();
+    final String protocol = args.length > 0 ? args[0] : null;
+
+    if ("NfcA".equals(protocol)) {
+      shell.start("android.nfc.tech.NfcA");
+    } else if ("NfcB".equals(protocol)) {
+      shell.start("android.nfc.tech.NfcB");
+    } else if ("NfcF".equals(protocol)) {
+      shell.start("android.nfc.tech.NfcF");
+    } else if ("NfcV".equals(protocol)) {
+      shell.start("android.nfc.tech.NfcV");
+    } else if ("IsoDep".equals(protocol)) {
+      shell.start("android.nfc.tech.IsoDep");
+    } else {
+      shell.start(protocol);
+    }
   }
 
 }

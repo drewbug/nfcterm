@@ -11,17 +11,25 @@ import android.nfc.tech.TagTechnology;
 
 import java.io.IOException;
 
+import java.lang.reflect.Method;
+
+import java.lang.ReflectiveOperationException;
+
 import java.util.concurrent.Semaphore;
 
 import java.util.Scanner;
 
 public class NfcShell extends INfcShell.Stub {
 
+  private String mProtocol = null;
+
   private TagTechnology mTag = null;
 
   private Semaphore mLock = new Semaphore(0);
 
-  public void start() throws IOException {
+  public void start(String protocol) throws IOException {
+    this.mProtocol = protocol;
+
     System.err.println("Listening for NFC tag!");
 
     this.mLock.acquireUninterruptibly();
@@ -32,15 +40,7 @@ public class NfcShell extends INfcShell.Stub {
 
     this.mTag.connect();
 
-    if (this.mTag instanceof NfcA) {
-      System.err.println("Connected: NfcA");
-    } else if (this.mTag instanceof NfcB) {
-      System.err.println("Connected: NfcB");
-    } else if (this.mTag instanceof NfcF) {
-      System.err.println("Connected: NfcF");
-    } else if (this.mTag instanceof NfcV) {
-      System.err.println("Connected: NfcV");
-    }
+    System.err.println("Connected: " + this.mTag.getClass().getName());
 
     Scanner scanner = new Scanner(System.in);
 
@@ -56,35 +56,31 @@ public class NfcShell extends INfcShell.Stub {
 
       System.out.println("> " + byteArrayToHexString(payload));
 
-      byte[] response = null;
-
       try {
-        if (this.mTag instanceof NfcA) {
-          response = ((NfcA) this.mTag).transceive(payload);
-        } else if (this.mTag instanceof NfcB) {
-          response = ((NfcB) this.mTag).transceive(payload);
-        } else if (this.mTag instanceof NfcF) {
-          response = ((NfcF) this.mTag).transceive(payload);
-        } else if (this.mTag instanceof NfcV) {
-          response = ((NfcV) this.mTag).transceive(payload);
-        }
-      } catch (TagLostException e) {
+        byte[] response = (byte[]) Class.forName(this.mProtocol).getMethod("transceive", byte[].class).invoke(this.mTag, payload);
+        System.out.println("< " + byteArrayToHexString(response));
+      } catch (ReflectiveOperationException e) {
         System.err.println("Tag lost");
         break;
       }
-
-      System.out.println("< " + byteArrayToHexString(response));
     }
   }
 
   @Override
   public void onTagDiscovered(Tag tag) {
-    if (this.mTag == null) { this.mTag = NfcA.get(tag); } else { return; }
-    if (this.mTag == null) { this.mTag = NfcB.get(tag); }
-    if (this.mTag == null) { this.mTag = NfcF.get(tag); }
-    if (this.mTag == null) { this.mTag = NfcV.get(tag); }
+    if (this.mTag != null) { return; }
 
-    this.mLock.release();
+    if (this.mProtocol == null) {
+      this.mProtocol = tag.getTechList()[0];
+    }
+
+    try {
+      this.mTag = (TagTechnology) Class.forName(this.mProtocol).getMethod("get", Tag.class).invoke(null, tag);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+
+    if (this.mTag != null) { this.mLock.release(); }
   }
 
   private static byte[] hexStringToByteArray(String s) {
