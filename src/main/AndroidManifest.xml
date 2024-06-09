@@ -1,2 +1,14 @@
-<!-- not a real Android application, it is run by app_process manually -->
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.NFC" />
+
+    <application>
+        <activity
+            android:name=".NfcActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Dialog"
+            android:label="nfcterm"
+            android:excludeFromRecents="true" />
+    </application>
+
+</manifest>

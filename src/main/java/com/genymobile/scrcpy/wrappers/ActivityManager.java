@@ -1,17 +1,14 @@
-package radio.ab3j.nfc.wrappers;
+package com.genymobile.scrcpy.wrappers;
 
-import radio.ab3j.nfc.Ln;
+import com.genymobile.scrcpy.FakeContext;
+import com.genymobile.scrcpy.Ln;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Intent;
-import android.os.Binder;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.IInterface;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 @SuppressLint("PrivateApi,DiscouragedPrivateApi")
@@ -19,7 +16,6 @@ public final class ActivityManager {
 
     private final IInterface manager;
     private Method startActivityAsUserMethod;
-    private Method forceStopPackageMethod;
 
     static ActivityManager create() {
         try {
@@ -37,7 +33,6 @@ public final class ActivityManager {
     private ActivityManager(IInterface manager) {
         this.manager = manager;
     }
-
 
     private Method getStartActivityAsUserMethod() throws NoSuchMethodException, ClassNotFoundException {
         if (startActivityAsUserMethod == null) {
@@ -57,7 +52,7 @@ public final class ActivityManager {
             return (int) method.invoke(
                     /* this */ manager,
                     /* caller */ null,
-                    /* callingPackage */ "com.android.shell",
+                    /* callingPackage */ FakeContext.PACKAGE_NAME,
                     /* intent */ intent,
                     /* resolvedType */ null,
                     /* resultTo */ null,
@@ -70,22 +65,6 @@ public final class ActivityManager {
         } catch (Throwable e) {
             Ln.e("Could not invoke method", e);
             return 0;
-        }
-    }
-
-    private Method getForceStopPackageMethod() throws NoSuchMethodException {
-        if (forceStopPackageMethod == null) {
-            forceStopPackageMethod = manager.getClass().getMethod("forceStopPackage", String.class, int.class);
-        }
-        return forceStopPackageMethod;
-    }
-
-    public void forceStopPackage(String packageName) {
-        try {
-            Method method = getForceStopPackageMethod();
-            method.invoke(manager, packageName, /* userId */ /* UserHandle.USER_CURRENT */ -2);
-        } catch (Throwable e) {
-            Ln.e("Could not invoke method", e);
         }
     }
 }

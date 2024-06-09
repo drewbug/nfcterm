@@ -1,46 +1,32 @@
 package radio.ab3j.nfc;
 
-import radio.ab3j.nfc.wrappers.ServiceManager;
+import com.genymobile.scrcpy.wrappers.ServiceManager;
 
-import android.content.Context;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 
-import android.nfc.NfcAdapter;
-import android.nfc.IAppCallback;
-import android.nfc.Tag;
+import android.os.Bundle;
 
-import android.os.Binder;
-import android.os.IBinder;
+import java.io.IOException;
 
 public class ShellMain {
 
-  public static void main(String[] args) {
-    try {
-      System.out.println("test");
+  public static void main(String[] args) throws IOException {
+    final NfcShell shell = new NfcShell();
 
-      Intent intent = new Intent(Intent.ACTION_MAIN);
-      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-      intent.addCategory(Intent.CATEGORY_LAUNCHER);
-      intent.setComponent(new ComponentName("com.android.shell", "com.android.shell.HeapDumpActivity"));
-      ServiceManager.getActivityManager().startActivity(intent);
+    final Intent intent = new Intent();
 
-      IBinder token = new Binder();
+    intent.setComponent(new ComponentName("radio.ab3j.nfc", "radio.ab3j.nfc.NfcActivity"));
 
-      IAppCallback.Stub mBinder = new IAppCallback.Stub() {
-        @Override
-        public void onTagDiscovered(Tag tag) {
-            System.out.println("tag found");
-        }
-      };
+    final Bundle extras = new Bundle();
 
-      ServiceManager.getNfcManager().setReaderMode(token, mBinder, 159, null);
+    extras.putBinder("token", shell);
 
-      Thread.currentThread().join();
+    intent.putExtras(extras);
 
-    } catch(Throwable t) {
-      t.printStackTrace();
-    }
+    ServiceManager.getActivityManager().startActivity(intent);
+
+    shell.start();
   }
+
 }

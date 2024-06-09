@@ -24,8 +24,6 @@ android {
         applicationId "radio.ab3j.nfc"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 20400
-        versionName "2.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
