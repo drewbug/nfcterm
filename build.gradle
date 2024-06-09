@@ -1,41 +1,10 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
+task assemble(type: Zip) {
+    dependsOn ':app:assemble'
+    from('app/build/outputs/apk/debug/app-debug.apk') {
+        rename 'app-debug.apk', 'nfcterm.apk'
     }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.3'
-    }
-}
-
-apply plugin: 'com.android.application'
-
-repositories {
-    google()
-    mavenCentral()
-}
-
-android {
-    namespace 'radio.ab3j.nfc'
-    compileSdk 34
-
-    defaultConfig {
-        applicationId "radio.ab3j.nfc"
-        minSdkVersion 21
-        targetSdkVersion 34
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-        }
-    }
-
-    buildFeatures {
-        buildConfig true
-        aidl true
-    }
+    from('src/nfcterm.sh')
+    archiveFileName.set('nfcterm.zip')
+    destinationDirectory.set(buildDir)
 }
 
